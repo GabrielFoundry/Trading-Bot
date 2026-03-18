@@ -9,7 +9,7 @@ import json
 import sqlite3
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Generator, Optional
 
@@ -516,7 +516,7 @@ class Database:
         """Met à jour des champs spécifiques de l'état du bot."""
         if not kwargs:
             return
-        kwargs["updated_at"] = datetime.utcnow().isoformat()
+        kwargs["updated_at"] = datetime.now(timezone.utc).isoformat()
         set_clause = ", ".join(f"{k}=:{k}" for k in kwargs)
         kwargs["id"] = 1
         with self._conn() as conn:
@@ -528,7 +528,7 @@ class Database:
         self.update_bot_state(paper_balance=new_balance)
 
     def set_bot_running(self, running: bool, mode: str = "paper") -> None:
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         self.update_bot_state(
             is_running=1 if running else 0,
             mode=mode,

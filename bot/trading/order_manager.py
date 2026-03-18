@@ -5,6 +5,7 @@ Chaque tick : fetch prix → vérifier SL/TP → générer signaux → ouvrir po
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from loguru import logger
@@ -143,12 +144,20 @@ class OrderManager:
                 exit_reason = self.strategy.should_exit(
                     position={"id": position.id, "symbol": position.symbol,
                                "side": position.side, "entry_price": position.entry_price,
+                               "stop_loss": position.stop_loss,
                                "leverage": position.leverage,
                                "liquidation_price": position.liquidation_price},
                     current_price=price,
                     signal=signal,
                 )
-                if exit_reason:
+                if exit_reason == "trailing_stop_breakeven":
+                    # Monter le SL au breakeven (entry_price) sans fermer la position
+                    self.paper_trader.update_trailing_stop(position.id, position.entry_price)
+                    logger.info(
+                        f"{pair}: trailing stop activé — SL déplacé au breakeven "
+                        f"({position.entry_price:.4f})"
+                    )
+                elif exit_reason:
                     result = self.paper_trader.execute_close(position.id, price, exit_reason)
                     if result:
                         positions_closed.append(result)
@@ -177,7 +186,6 @@ class OrderManager:
             self.db.update_bot_state(max_drawdown_triggered=1)
 
         # 6. Mettre à jour le dernier tick
-        from datetime import datetime, timezone
         self.db.update_bot_state(last_tick_at=datetime.now(timezone.utc).isoformat())
 
         return {
@@ -197,7 +205,6 @@ class OrderManager:
             news_scored = self.sentiment_analyzer.analyze_news_items(news_items)
 
             # Score de sentiment agrégé
-            from bot.data.sentiment_analyzer import SentimentAnalyzer
             agg = self.sentiment_analyzer.aggregate_news_sentiment(news_scored)
 
             # Fear & Greed

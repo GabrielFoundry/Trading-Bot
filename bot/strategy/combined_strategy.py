@@ -120,16 +120,17 @@ class CombinedStrategy(BaseStrategy):
             )
             return "liquidation_guard"
 
-        # --- Trailing stop ---
+        # --- Trailing stop : montée au breakeven ---
         if side == "BUY":
             profit_pct = (current_price - entry_price) / entry_price * 100
+            sl_below_entry = position.get("stop_loss", 0) < entry_price
+            if profit_pct >= self.TRAILING_STOP_ACTIVATION_PCT and sl_below_entry:
+                return "trailing_stop_breakeven"
         else:
             profit_pct = (entry_price - current_price) / entry_price * 100
-
-        # Si en profit > TRAILING_STOP_ACTIVATION_PCT, le SL monte au breakeven
-        # (le paper_trader gère le SL réel, on signale juste ici qu'il faut l'ajuster)
-        # Note : le trailing stop complet (SL qui suit le prix) serait géré
-        # dans order_manager avec une mise à jour dynamique du SL en DB
+            sl_above_entry = position.get("stop_loss", 0) > entry_price
+            if profit_pct >= self.TRAILING_STOP_ACTIVATION_PCT and sl_above_entry:
+                return "trailing_stop_breakeven"
 
         # --- Sortie sur signal SELL ---
         if signal.action == "SELL" and signal.confidence >= self.MIN_EXIT_CONFIDENCE:

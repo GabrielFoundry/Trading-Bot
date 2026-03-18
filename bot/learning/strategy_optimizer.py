@@ -5,7 +5,6 @@ Ne modifie les paramètres QUE si l'amélioration dépasse le seuil configuré.
 
 from __future__ import annotations
 
-import itertools
 from datetime import datetime, timezone
 from typing import Optional
 

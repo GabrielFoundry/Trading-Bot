@@ -7,7 +7,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from api.routes import bot, charts, portfolio, signals, trades
@@ -69,7 +69,7 @@ async def serve_sw():
     sw = MOBILE_DIR / "sw.js"
     if sw.exists():
         return FileResponse(str(sw), media_type="application/javascript")
-    return FileResponse.__new__(FileResponse)
+    return JSONResponse({"error": "sw.js not found"}, status_code=404)
 
 
 @app.get("/")

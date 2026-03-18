@@ -136,8 +136,8 @@ class PaperTrader:
         else:
             gross_pnl = (position.entry_price - current_bid_price) * position.quantity * position.leverage
 
-        # Frais de sortie (sur la valeur nominale)
-        exit_fee = (position.quantity * current_bid_price) / position.leverage * self.fee_rate
+        # Frais de sortie (sur la valeur notionnelle, comme Binance Futures)
+        exit_fee = position.quantity * current_bid_price * self.fee_rate
         net_pnl = gross_pnl - exit_fee
         pnl_pct = net_pnl / (position.entry_price * position.quantity / position.leverage) * 100
 

@@ -182,8 +182,7 @@ class TradingBot:
             return True  # Pas de restriction = toujours actif
 
         from datetime import time as dtime
-        import time as tmod
-        now = datetime.now()  # heure locale
+        now = datetime.now(timezone.utc)  # UTC, cohérent avec le scheduler
         day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         today = day_names[now.weekday()]
         allowed_days = schedule_cfg.get("days", day_names)

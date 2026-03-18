@@ -252,10 +252,10 @@ class SignalGenerator:
     ) -> tuple[ActionType, float]:
         """Convertit le score en action + confidence."""
         if combined_score >= params.buy_threshold:
-            confidence = min(combined_score / 1.0, 1.0)
+            confidence = min(combined_score / max(params.buy_threshold, 1e-9), 1.0)
             return "BUY", confidence
         elif combined_score <= params.sell_threshold:
-            confidence = min(abs(combined_score) / 1.0, 1.0)
+            confidence = min(abs(combined_score) / max(abs(params.sell_threshold), 1e-9), 1.0)
             return "SELL", confidence
         else:
             # HOLD — confidence = distance aux seuils (faible = proche d'une décision)
