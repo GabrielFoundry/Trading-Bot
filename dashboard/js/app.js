@@ -290,7 +290,7 @@ async function loadNewsSection() {
       <div class="news-item">
         <div class="news-title">${escHtml(n.title || '—')}</div>
         <div class="news-meta">
-          ${n.currency || ''} · ${fmtDatetime(n.published_at)}
+          ${n.currencies || ''} · ${fmtDatetime(n.published_at)}
           <span class="news-sentiment ${sentClass}">${sentLabel}</span>
         </div>
       </div>`;

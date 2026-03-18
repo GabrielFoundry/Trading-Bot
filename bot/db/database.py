@@ -261,6 +261,14 @@ class Database:
                 "UPDATE bot_state SET total_trades_count = total_trades_count + 1 WHERE id=1"
             )
 
+    def trade_exists(self, trade_id: str) -> bool:
+        """Vérifie si un trade existe (ouvert ou fermé) par son ID."""
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT 1 FROM trades WHERE id=? LIMIT 1", (trade_id,)
+            ).fetchone()
+            return row is not None
+
     def get_open_trades(self) -> list[dict]:
         """Retourne tous les trades ouverts."""
         with self._conn() as conn:

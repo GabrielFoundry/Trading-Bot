@@ -38,10 +38,8 @@ def submit_feedback(
     if body.rating not in ("good", "bad", "neutral"):
         raise HTTPException(400, "rating doit être 'good', 'bad' ou 'neutral'")
 
-    # Vérifier que le trade existe
-    history = db.get_trade_history(limit=500)
-    trade_ids = {t["id"] for t in history}
-    if trade_id not in trade_ids:
+    # Vérifier que le trade existe (requête directe par ID, sans limite)
+    if not db.trade_exists(trade_id):
         raise HTTPException(404, f"Trade {trade_id} introuvable")
 
     feedback_id = db.save_trade_feedback(

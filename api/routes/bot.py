@@ -1,6 +1,6 @@
 """Routes API pour le contrôle du bot."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from bot.db.database import Database, DB_PATH
 
 # Référence au bot global (injectée depuis api/main.py au démarrage)
@@ -58,4 +58,7 @@ def reset_drawdown_guard(db: Database = Depends(get_db)):
 
 @router.get("/performance")
 def get_performance(db: Database = Depends(get_db)):
-    return db.get_latest_performance()
+    perf = db.get_latest_performance()
+    if perf is None:
+        raise HTTPException(404, "Aucune métrique disponible — lancez le bot d'abord")
+    return perf

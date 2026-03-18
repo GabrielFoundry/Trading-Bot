@@ -104,8 +104,8 @@ def get_config():
         },
         "schedule": {
             "enabled": schedule.get("enabled", False),
-            "start": schedule.get("trading_hours", [{}])[0].get("start", "07:00"),
-            "end": schedule.get("trading_hours", [{}])[0].get("end", "22:00"),
+            "start": (schedule.get("trading_hours") or [{}])[0].get("start", "07:00"),
+            "end": (schedule.get("trading_hours") or [{}])[0].get("end", "22:00"),
         },
     }
 
@@ -193,8 +193,9 @@ def update_config(update: MobileConfigUpdate):
             cfg["schedule"]["enabled"] = update.schedule_enabled
             changed.append(f"planning {'activé' if update.schedule_enabled else 'désactivé'}")
 
-        start = update.schedule_start or cfg.get("schedule", {}).get("trading_hours", [{"start": "07:00"}])[0].get("start", "07:00")
-        end = update.schedule_end or cfg.get("schedule", {}).get("trading_hours", [{"end": "22:00"}])[0].get("end", "22:00")
+        existing_hours = (cfg.get("schedule", {}).get("trading_hours") or [{}])[0]
+        start = update.schedule_start or existing_hours.get("start", "07:00")
+        end = update.schedule_end or existing_hours.get("end", "22:00")
 
         if not _valid_time(start) or not _valid_time(end):
             raise HTTPException(400, "Format d'heure invalide. Utilisez HH:MM (ex: 07:00)")
@@ -216,5 +217,8 @@ def update_config(update: MobileConfigUpdate):
 
 
 def _valid_time(s: str) -> bool:
-    """Valide le format HH:MM."""
-    return bool(re.match(r"^\d{2}:\d{2}$", s))
+    """Valide le format HH:MM avec vérification des plages (00-23:00-59)."""
+    if not re.match(r"^\d{2}:\d{2}$", s):
+        return False
+    h, m = int(s[:2]), int(s[3:])
+    return 0 <= h <= 23 and 0 <= m <= 59
