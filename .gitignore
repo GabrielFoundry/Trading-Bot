@@ -1,0 +1,51 @@
+# Secrets — NE JAMAIS committer
+.env
+config/.env
+
+# Base de données (contient des données financières sensibles)
+data/*.db
+data/*.sqlite
+data/*.csv
+
+# Logs
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+*.whl
+
+# Environnements virtuels
+venv/
+env/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Modèles ML (trop volumineux pour git)
+models/
+*.bin
+*.pt
+*.safetensors
+
+# Cache HuggingFace
+.cache/
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage

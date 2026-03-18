@@ -1,0 +1,125 @@
+# ============================================================
+#  CONFIGURATION DU BOT DE TRADING CRYPTO
+#  Ce fichier est le seul que vous avez besoin de modifier.
+#  Lisez les commentaires avant chaque paramètre.
+# ============================================================
+
+exchange:
+  name: "binance"
+  # IMPORTANT : testnet: true = argent fictif (paper trading)
+  # Ne passez à false QUE lorsque vous avez validé le bot sur plusieurs semaines.
+  testnet: true
+  # Vos clés API Binance (depuis le fichier .env — ne jamais mettre ici)
+  # Voir .env.example pour les instructions de création.
+
+trading:
+  base_currency: "USDT"
+  # Paires de crypto à trader
+  pairs:
+    - "BTC/USDT"
+    - "ETH/USDT"
+    - "BNB/USDT"
+    - "SOL/USDT"
+  # Risque par trade en % du portfolio (recommandé : 3-5%)
+  risk_per_trade_pct: 3.5
+  # Nombre maximum de positions ouvertes simultanément
+  max_open_positions: 3
+  # Balance initiale du paper trading en USDT (votre budget réel)
+  paper_balance: 300.0
+  # Timeframe des bougies pour l'analyse
+  # Options : 1m, 5m, 15m, 1h, 4h, 1d
+  timeframe: "1h"
+  # Frais de transaction Binance (0.1% = 0.001)
+  fee_rate: 0.001
+
+strategy:
+  # RSI (Relative Strength Index)
+  rsi_period: 14
+  rsi_oversold: 30       # Signal d'achat potentiel
+  rsi_overbought: 70     # Signal de vente potentiel
+  # MACD
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  # Bandes de Bollinger
+  bb_period: 20
+  bb_std: 2.0
+  # Moyennes mobiles exponentielles
+  ema_fast: 9
+  ema_slow: 21
+  # Volume (multiplicateur vs moyenne 20 périodes)
+  volume_threshold_multiplier: 1.5
+  # Seuils de décision (BUY si score >= buy_threshold)
+  buy_threshold: 0.4
+  sell_threshold: -0.4
+
+leverage:
+  # Levier maximum autorisé (x2 recommandé pour débutants)
+  max_leverage: 2
+  # Seuils de confiance pour le levier adaptatif
+  high_confidence_threshold: 0.80   # confiance > 80% → levier max
+  mid_confidence_threshold: 0.60    # confiance 60-80% → levier intermédiaire
+  # Levier intermédiaire (entre x1 et max_leverage)
+  mid_leverage: 1.5
+  # Fermeture auto si prix approche à X% du prix de liquidation
+  liquidation_guard_pct: 5.0
+
+risk:
+  # Stop-loss en % (utilisé comme base, affiné par l'ATR)
+  stop_loss_pct: 2.0
+  # Take-profit en % (ratio risque/récompense 1:2)
+  take_profit_pct: 4.0
+  # Arrêt total du bot si le portfolio perd ce % depuis le départ
+  max_drawdown_pct: 15.0
+  # Multiplicateur ATR pour le stop-loss adaptatif
+  atr_stop_multiplier: 1.5
+  # Ratio risque/récompense (2 = TP = 2 × SL)
+  risk_reward_ratio: 2.0
+
+learning:
+  # Fréquence d'optimisation (en jours)
+  optimize_every_days: 1
+  # Nombre minimum de trades avant d'activer l'optimiseur
+  min_trades_for_optimization: 50
+  # Amélioration minimale requise pour mettre à jour les paramètres (+5%)
+  min_improvement_pct: 5.0
+  # Fenêtre glissante pour les métriques de performance
+  performance_window_trades: 50
+
+news:
+  # Clé API CryptoPanic (gratuit sur https://cryptopanic.com/developers/api/)
+  # Laisser vide pour utiliser uniquement NewsAPI
+  cryptopanic_api_key: ""
+  # Clé API NewsAPI (gratuit sur https://newsapi.org/)
+  newsapi_key: ""
+  # Poids du sentiment des news sur le signal final (0 = ignoré, 1 = tout)
+  sentiment_weight: 0.25
+  # Durée du cache des news en heures (limite les appels API gratuits)
+  news_cache_hours: 6
+  # Utiliser le modèle FinBERT (plus précis mais ~500MB à télécharger)
+  # false = VADER (rapide, aucun téléchargement)
+  use_transformer_sentiment: false
+
+scheduler:
+  # Intervalle du tick principal en minutes
+  trading_interval_minutes: 5
+  # Intervalle de mise à jour des news en heures
+  news_update_hours: 1
+  # Heure UTC du cycle d'apprentissage quotidien (format HH:MM)
+  daily_learning_time: "00:05"
+  # Heure UTC du snapshot portfolio quotidien
+  daily_snapshot_time: "00:00"
+
+dashboard:
+  host: "127.0.0.1"
+  port: 8000
+  # Rafraîchissement du dashboard en secondes
+  auto_refresh_seconds: 5
+  # Nombre de jours d'historique affiché par défaut
+  chart_history_days: 30
+
+logging:
+  level: "INFO"   # DEBUG, INFO, WARNING, ERROR
+  # Rotation des fichiers logs (ex: "10 MB", "1 week")
+  rotation: "10 MB"
+  retention: "1 month"

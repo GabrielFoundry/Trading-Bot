@@ -1,0 +1,41 @@
+# === TRADING & MARCHÉS ===
+ccxt==4.4.30
+pandas==2.2.3
+numpy==1.26.4
+ta==0.11.0
+
+# === API WEB & DASHBOARD ===
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+websockets==14.1
+python-multipart==0.0.12
+
+# === HTTP & ASYNCHRONE ===
+aiohttp==3.11.10
+requests==2.32.3
+
+# === CONFIGURATION ===
+pyyaml==6.0.2
+python-dotenv==1.0.1
+
+# === SCHEDULER ===
+apscheduler==3.10.4
+
+# === LOGS ===
+loguru==0.7.3
+
+# === SENTIMENT ANALYSE ===
+vaderSentiment==3.3.2
+
+# === VALIDATION ===
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# === UTILITAIRES ===
+python-dateutil==2.9.0
+
+# === OPTIONNEL : Sentiment avancé (FinBERT) ===
+# Décommentez pour activer use_transformer_sentiment: true dans config.yaml
+# transformers==4.47.1
+# torch==2.5.1
+# sentencepiece==0.2.0

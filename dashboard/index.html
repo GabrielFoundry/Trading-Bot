@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trading Bot Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ============================== HEADER ============================== -->
+<header class="header">
+  <div class="header-title">
+    📈 Trading Bot
+  </div>
+  <div class="header-badges">
+    <span id="botStatusBadge" class="badge badge-stopped">ARRÊTÉ</span>
+    <span id="botMode" class="badge badge-paper">Paper</span>
+    <div class="ws-status">
+      <span id="wsDot" class="status-dot dot-gray"></span>
+      <span id="wsLabel">Connexion...</span>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- Alerte Drawdown -->
+  <div id="drawdownAlert" class="alert-banner hidden">
+    <span>⛔</span>
+    <span class="alert-text">
+      DRAWDOWN MAXIMUM ATTEINT — Le bot a arrêté automatiquement de trader.
+      Analysez les performances avant de reprendre.
+    </span>
+    <button id="resetDrawdownBtn" class="btn btn-secondary" style="margin-left:auto">
+      Reprendre
+    </button>
+  </div>
+
+  <!-- ============================== MÉTRIQUES PRINCIPALES ============================== -->
+  <div class="grid-4">
+    <div class="card">
+      <div class="card-title">Valeur Totale</div>
+      <div id="totalValue" class="card-value">—</div>
+      <div id="lastTickAt" class="card-sub">Dernier tick : —</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Balance USDT</div>
+      <div id="usdtBalance" class="card-value">—</div>
+      <div class="card-sub">Disponible pour trader</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Positions Ouvertes</div>
+      <div id="openPositionsCount" class="card-value">—</div>
+      <div id="positionsValue" class="card-sub">Valeur : —</div>
+    </div>
+    <div class="card">
+      <div class="card-title">P&amp;L Total Réalisé</div>
+      <div id="totalPnl" class="card-value">—</div>
+      <div class="card-sub">Depuis le démarrage</div>
+    </div>
+  </div>
+
+  <!-- ============================== GRAPHIQUES ============================== -->
+  <div class="grid-2" style="margin-bottom:24px">
+    <div class="card">
+      <div class="section-title">Évolution du Portfolio</div>
+      <div class="chart-container">
+        <canvas id="portfolioChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">P&amp;L par Paire</div>
+      <div class="chart-container">
+        <canvas id="pnlChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== SIGNAUX + WIN/LOSS ============================== -->
+  <div class="grid-2" style="margin-bottom:24px">
+    <div class="card">
+      <div class="section-title">Signaux Récents</div>
+      <div id="signalsContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+        <div class="empty-state"><span class="spinner"></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Performance</div>
+      <div class="grid-2" style="margin-bottom:16px; gap:8px">
+        <div style="text-align:center">
+          <div class="card-title">Win Rate</div>
+          <div id="winRate" class="card-value" style="font-size:22px">—</div>
+        </div>
+        <div style="text-align:center">
+          <div class="card-title">Profit Factor</div>
+          <div id="profitFactor" class="card-value" style="font-size:22px">—</div>
+        </div>
+        <div style="text-align:center">
+          <div class="card-title">Sharpe Ratio</div>
+          <div id="sharpeRatio" class="card-value" style="font-size:22px">—</div>
+        </div>
+        <div style="text-align:center">
+          <div class="card-title">Max Drawdown</div>
+          <div id="maxDrawdown" class="card-value negative" style="font-size:22px">—</div>
+        </div>
+      </div>
+      <div class="chart-container" style="height:160px">
+        <canvas id="winLossChart"></canvas>
+      </div>
+      <div class="metric-row" style="margin-top:12px">
+        <span class="metric-label">Total trades</span>
+        <span id="totalTrades" class="metric-value">—</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Meilleure paire</span>
+        <span id="bestSymbol" class="metric-value pnl-pos">—</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Paire à améliorer</span>
+        <span id="worstSymbol" class="metric-value pnl-neg">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== POSITIONS OUVERTES ============================== -->
+  <div class="card" style="margin-bottom:24px">
+    <div class="section-title">Positions Ouvertes</div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Paire</th>
+            <th>Côté / Levier</th>
+            <th>Prix Entrée</th>
+            <th>Prix Actuel</th>
+            <th>Stop-Loss</th>
+            <th>Take-Profit</th>
+            <th>Prix Liq.</th>
+            <th>P&amp;L Non-réalisé</th>
+            <th>Durée</th>
+          </tr>
+        </thead>
+        <tbody id="positionsBody">
+          <tr><td colspan="9" class="empty-state">Aucune position ouverte</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============================== HISTORIQUE DES TRADES ============================== -->
+  <div class="card">
+    <div class="section-title">Derniers Trades Clôturés</div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Paire</th>
+            <th>Côté / Levier</th>
+            <th>Prix Entrée</th>
+            <th>Prix Sortie</th>
+            <th>P&amp;L USDT</th>
+            <th>P&amp;L %</th>
+            <th>Raison Sortie</th>
+          </tr>
+        </thead>
+        <tbody id="tradesBody">
+          <tr><td colspan="7" class="empty-state"><span class="spinner"></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/charts.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
