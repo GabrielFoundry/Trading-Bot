@@ -534,3 +534,68 @@ class Database:
             mode=mode,
             started_at=now if running else None,
         )
+
+    # ------------------------------------------------------------------
+    # Trade Feedback (éducation du bot)
+    # ------------------------------------------------------------------
+
+    def save_trade_feedback(
+        self,
+        trade_id: str,
+        rating: str,
+        comment: Optional[str] = None,
+        context: Optional[dict] = None,
+    ) -> int:
+        """Sauvegarde le feedback de l'utilisateur sur un trade."""
+        with self._conn() as conn:
+            cursor = conn.execute(
+                """INSERT OR REPLACE INTO trade_feedback
+                   (trade_id, rating, comment, context)
+                   VALUES (?, ?, ?, ?)""",
+                (trade_id, rating, comment, json.dumps(context) if context else None),
+            )
+            return cursor.lastrowid
+
+    def get_feedback_for_trade(self, trade_id: str) -> Optional[dict]:
+        """Retourne le feedback pour un trade donné."""
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM trade_feedback WHERE trade_id=? ORDER BY created_at DESC LIMIT 1",
+                (trade_id,),
+            ).fetchone()
+            return dict(row) if row else None
+
+    def get_all_feedback(self, limit: int = 100) -> list[dict]:
+        """Retourne tous les feedbacks avec les détails du trade associé."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT f.*, t.symbol, t.side, t.entry_price, t.exit_price,
+                          t.pnl_usdt, t.pnl_pct, t.leverage, t.opened_at, t.closed_at
+                   FROM trade_feedback f
+                   JOIN trades t ON f.trade_id = t.id
+                   ORDER BY f.created_at DESC LIMIT ?""",
+                (limit,),
+            ).fetchall()
+            result = []
+            for r in rows:
+                d = dict(r)
+                if d.get("context"):
+                    try:
+                        d["context"] = json.loads(d["context"])
+                    except Exception:
+                        pass
+                result.append(d)
+            return result
+
+    def get_feedback_stats(self) -> dict:
+        """Statistiques globales sur les feedbacks."""
+        with self._conn() as conn:
+            row = conn.execute(
+                """SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN rating='good' THEN 1 ELSE 0 END) as good_count,
+                    SUM(CASE WHEN rating='bad' THEN 1 ELSE 0 END) as bad_count,
+                    SUM(CASE WHEN rating='neutral' THEN 1 ELSE 0 END) as neutral_count
+                   FROM trade_feedback"""
+            ).fetchone()
+            return dict(row) if row else {}

@@ -123,3 +123,14 @@ logging:
   # Rotation des fichiers logs (ex: "10 MB", "1 week")
   rotation: "10 MB"
   retention: "1 month"
+
+# Plages horaires de trading (pour PC qu'on éteint la nuit)
+# Le bot reste lancé mais ne prend plus de nouvelles positions hors de ces horaires
+schedule:
+  enabled: true
+  # Horaires en heure locale (le système convertit automatiquement)
+  trading_hours:
+    - start: "08:00"   # Heure de début (format HH:MM)
+      end: "22:30"     # Heure de fin
+  # Jours actifs (tous par défaut, crypto = 24/7)
+  days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]

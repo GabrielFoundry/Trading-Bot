@@ -175,12 +175,46 @@ class TradingBot:
     # Tâches planifiées
     # ------------------------------------------------------------------
 
+    def _is_in_trading_hours(self) -> bool:
+        """Vérifie si l'heure actuelle est dans les plages horaires configurées."""
+        schedule_cfg = self.config.get("schedule", {})
+        if not schedule_cfg.get("enabled", False):
+            return True  # Pas de restriction = toujours actif
+
+        from datetime import time as dtime
+        import time as tmod
+        now = datetime.now()  # heure locale
+        day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        today = day_names[now.weekday()]
+        allowed_days = schedule_cfg.get("days", day_names)
+        if today not in allowed_days:
+            return False
+
+        for slot in schedule_cfg.get("trading_hours", []):
+            try:
+                start_h, start_m = map(int, slot["start"].split(":"))
+                end_h, end_m = map(int, slot["end"].split(":"))
+                start_t = dtime(start_h, start_m)
+                end_t = dtime(end_h, end_m)
+                current_t = now.time().replace(second=0, microsecond=0)
+                if start_t <= current_t <= end_t:
+                    return True
+            except Exception:
+                return True  # En cas d'erreur de parsing, ne pas bloquer
+
+        return False
+
     async def trading_loop(self) -> None:
         """Tick principal — exécuté toutes les N minutes."""
         try:
             state = self.db.get_bot_state()
             if not state.is_running:
                 return
+
+            if not self._is_in_trading_hours():
+                logger.debug("Hors plages horaires — tick ignoré")
+                return
+
             result = self.order_manager.run_tick()
             if result.get("positions_opened") or result.get("positions_closed"):
                 # Calculer les métriques après chaque fermeture de trade

@@ -1,20 +1,30 @@
 /**
  * Initialisation et mise à jour des graphiques Chart.js.
+ * Adapté mobile : moins de points, couleurs unifiées.
  */
 
 let portfolioChart = null;
 let pnlChart = null;
-let winLossChart = null;
 
-const CHART_DEFAULTS = {
+const C_GREEN  = '#00d4aa';
+const C_RED    = '#ff4757';
+const C_BORDER = '#2d3561';
+const C_TEXT   = '#8892a4';
+
+const BASE_OPTS = {
   responsive: true,
   maintainAspectRatio: false,
+  animation: false,
   plugins: { legend: { display: false } },
   scales: {
-    x: { grid: { color: '#30363d' }, ticks: { color: '#7d8590', maxTicksLimit: 8 } },
-    y: { grid: { color: '#30363d' }, ticks: { color: '#7d8590' } },
+    x: { grid: { color: C_BORDER }, ticks: { color: C_TEXT, maxTicksLimit: 6 } },
+    y: { grid: { color: C_BORDER }, ticks: { color: C_TEXT } },
   },
 };
+
+// ─────────────────────────────────────────
+// Portfolio
+// ─────────────────────────────────────────
 
 function initPortfolioChart() {
   const ctx = document.getElementById('portfolioChart');
@@ -22,35 +32,39 @@ function initPortfolioChart() {
   portfolioChart = new Chart(ctx, {
     type: 'line',
     data: { labels: [], datasets: [{
-      label: 'Valeur Portfolio (USDT)',
+      label: 'Portfolio (USDT)',
       data: [],
-      borderColor: '#58a6ff',
-      backgroundColor: 'rgba(88,166,255,0.08)',
+      borderColor: C_GREEN,
+      backgroundColor: 'rgba(0,212,170,0.08)',
       fill: true,
       tension: 0.3,
-      pointRadius: 3,
+      pointRadius: 2,
       pointHoverRadius: 5,
     }]},
     options: {
-      ...CHART_DEFAULTS,
-      plugins: { legend: { display: true, labels: { color: '#e6edf3' } } },
+      ...BASE_OPTS,
+      plugins: { legend: { display: true, labels: { color: '#e0e0e0', font: { size: 11 } } } },
       scales: {
-        x: { ...CHART_DEFAULTS.scales.x },
-        y: { ...CHART_DEFAULTS.scales.y,
-          ticks: { color: '#7d8590', callback: v => v.toFixed(2) + ' $' }
+        x: BASE_OPTS.scales.x,
+        y: { ...BASE_OPTS.scales.y,
+          ticks: { color: C_TEXT, callback: v => v.toFixed(0) + '$' },
         },
       },
     },
   });
 }
 
-async function updatePortfolioChart() {
-  const data = await api.getPortfolioChart(30);
+async function updatePortfolioChart(days = 30) {
+  const data = await api.getPortfolioChart(days);
   if (!data || !portfolioChart) return;
-  portfolioChart.data.labels = data.map(d => d.date.slice(5)); // MM-DD
+  portfolioChart.data.labels = data.map(d => d.date.slice(5));
   portfolioChart.data.datasets[0].data = data.map(d => d.total_value);
   portfolioChart.update('none');
 }
+
+// ─────────────────────────────────────────
+// PnL par paire
+// ─────────────────────────────────────────
 
 function initPnlChart() {
   const ctx = document.getElementById('pnlChart');
@@ -60,14 +74,14 @@ function initPnlChart() {
     data: { labels: [], datasets: [{
       data: [],
       backgroundColor: [],
-      borderRadius: 4,
+      borderRadius: 6,
     }]},
     options: {
-      ...CHART_DEFAULTS,
+      ...BASE_OPTS,
       scales: {
-        x: { ...CHART_DEFAULTS.scales.x },
-        y: { ...CHART_DEFAULTS.scales.y,
-          ticks: { color: '#7d8590', callback: v => v.toFixed(2) + ' $' }
+        x: BASE_OPTS.scales.x,
+        y: { ...BASE_OPTS.scales.y,
+          ticks: { color: C_TEXT, callback: v => v.toFixed(1) + '$' },
         },
       },
     },
@@ -80,43 +94,20 @@ async function updatePnlChart() {
   pnlChart.data.labels = data.map(d => d.symbol.replace('/USDT', ''));
   pnlChart.data.datasets[0].data = data.map(d => d.total_pnl);
   pnlChart.data.datasets[0].backgroundColor = data.map(d =>
-    d.total_pnl >= 0 ? 'rgba(63,185,80,0.7)' : 'rgba(248,81,73,0.7)'
+    d.total_pnl >= 0 ? 'rgba(0,212,170,0.7)' : 'rgba(255,71,87,0.7)'
   );
   pnlChart.update('none');
 }
 
-function initWinLossChart() {
-  const ctx = document.getElementById('winLossChart');
-  if (!ctx) return;
-  winLossChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Gagnants', 'Perdants'],
-      datasets: [{ data: [0, 0], backgroundColor: ['#3fb950', '#f85149'], borderWidth: 0 }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'bottom', labels: { color: '#e6edf3', padding: 12 } },
-      },
-      cutout: '65%',
-    },
-  });
-}
-
-function updateWinLossChart(winning, losing) {
-  if (!winLossChart) return;
-  winLossChart.data.datasets[0].data = [winning, losing];
-  winLossChart.update('none');
-}
+// ─────────────────────────────────────────
+// Public
+// ─────────────────────────────────────────
 
 function initAllCharts() {
   initPortfolioChart();
   initPnlChart();
-  initWinLossChart();
 }
 
-async function refreshAllCharts() {
-  await Promise.all([updatePortfolioChart(), updatePnlChart()]);
+async function refreshAllCharts(days = 30) {
+  await Promise.all([updatePortfolioChart(days), updatePnlChart()]);
 }

@@ -161,6 +161,17 @@ CREATE TABLE IF NOT EXISTS bot_state (
     updated_at              TEXT DEFAULT (datetime('now'))
 );
 
+-- Feedback utilisateur sur les trades (pour l'éducation du bot)
+CREATE TABLE IF NOT EXISTS trade_feedback (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    trade_id    TEXT NOT NULL REFERENCES trades(id),
+    rating      TEXT CHECK(rating IN ('good', 'bad', 'neutral')) DEFAULT 'neutral',
+    comment     TEXT,
+    context     TEXT,       -- JSON : contexte marché décrit par l'utilisateur
+    created_at  TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_trade_id ON trade_feedback(trade_id);
+
 -- Insertion de l'état initial du bot
 INSERT OR IGNORE INTO bot_state (id) VALUES (1);
 
